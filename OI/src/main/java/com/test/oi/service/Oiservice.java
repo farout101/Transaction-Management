@@ -8,7 +8,6 @@ import com.test.oi.model.IndividualUser;
 import com.test.oi.repository.IndiUserRepo;
 import com.test.oi.repository.OiRepo;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
