@@ -1,32 +1,46 @@
 package com.test.dps.controller;
 
 import com.test.dps.dto.Transaction;
-import com.test.dps.repo.TransactionRepository;
+import com.test.dps.service.AsyncService;
 import com.test.dps.service.TransactionService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequiredArgsConstructor
 public class PaymentController {
 
+    @Autowired
     TransactionService transactionService;
+
+    @Autowired
+    AsyncService asyncService;
 
     @GetMapping("all")
     public List<Transaction> getAllTransactions() {
         return transactionService.getAllTransaction();
     }
 
-    @PostMapping("make_payment")
-    public int makeTransaction(@RequestBody Transaction transaction) {
-        return transactionService.makeTransaction(transaction);
+    @PostMapping("/payment/start")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, Object> makeTransaction(@RequestBody Transaction transaction) {
+        Map<String, Object> mso;
+        try {
+            mso = transactionService.makeTransaction(transaction);
+            asyncService.postResponseTask();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Error("Something went wrong");
+        }
+        return mso;
+    }
+
+    @ResponseBody
+    @GetMapping("payment/{id}/status")
+    public Transaction requestStatus(@PathVariable int id) {
+        return transactionService.getSingleTransaction(id);
     }
 }
