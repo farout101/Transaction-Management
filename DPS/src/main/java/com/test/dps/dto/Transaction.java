@@ -1,54 +1,25 @@
 package com.test.dps.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.math.BigInteger;
+import java.time.LocalDateTime;
+
+
 public class Transaction {
     private int id;
-    private String userId;
-    private String ioGroup;
-    private String targetIoGroup;
+    private String senderUserId;
+    private String senderUserGroup;
+    private String receiverUserId;
+    private String receiverUserGroup;
+    private String status;
+    private LocalDateTime dateTime;
     private double amount;
 
     public Transaction() {}
-
-    public Transaction(int id, String userId, String ioGroup, String targetIoGroup, double amount) {
-        this.id = id;
-        this.userId = userId;
-        this.ioGroup = ioGroup;
-        this.targetIoGroup = targetIoGroup;
-        this.amount = amount;
-    }
-
-    // Getters and setters
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getIoGroup() {
-        return ioGroup;
-    }
-
-    public void setIoGroup(String ioGroup) {
-        this.ioGroup = ioGroup;
-    }
-
-    public String getTargetIoGroup() {
-        return targetIoGroup;
-    }
-
-    public void setTargetIoGroup(String targetIoGroup) {
-        this.targetIoGroup = targetIoGroup;
-    }
 
     public double getAmount() {
         return amount;
@@ -58,14 +29,59 @@ public class Transaction {
         this.amount = amount;
     }
 
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id=" + id +
-                ", userId='" + userId + '\'' +
-                ", ioGroup='" + ioGroup + '\'' +
-                ", targetIoGroup='" + targetIoGroup + '\'' +
-                ", amount=" + amount +
-                '}';
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getReceiverUserGroup() {
+        return receiverUserGroup;
+    }
+
+    public void setReceiverUserGroup(String receiverUserGroup) {
+        this.receiverUserGroup = receiverUserGroup;
+    }
+
+    public String getReceiverUserId() {
+        return receiverUserId;
+    }
+
+    public void setReceiverUserId(String receiverUserId) {
+        this.receiverUserId = receiverUserId;
+    }
+
+    public String getSenderUserGroup() {
+        return senderUserGroup;
+    }
+
+    public void setSenderUserGroup(String senderUserGroup) {
+        this.senderUserGroup = senderUserGroup;
+    }
+
+    public String getSenderUserId() {
+        return senderUserId;
+    }
+
+    public void setSenderUserId(String senderUserId) {
+        this.senderUserId = senderUserId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
