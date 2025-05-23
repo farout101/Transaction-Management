@@ -1,6 +1,6 @@
 package com.test.dps.repo;
 
-import com.test.dps.dto.Transaction;
+import com.test.dps.model.Transaction;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -29,8 +29,6 @@ public class TransactionRepository {
         rowObject.setStatus(r.getString("status"));
         return rowObject;
     };
-
-
 
 
     TransactionRepository(JdbcTemplate jdbcTemplate) {
@@ -71,5 +69,19 @@ public class TransactionRepository {
         if(result.size() != 1) throw new Error("Selecting from database went something wrong");
         return result.get(0);
     }
+
+    public List<Transaction> getAllWaitingTransaction() {
+        String sql = "SELECT * FROM transaction WHERE status = 'WAITING'";
+
+        return jdbcTemplate.query(sql, rowMapper);
+    }
+
+    public int updateTransactionStatus(int id, String newStatus) {
+        String sql = "UPDATE transaction SET status = ? WHERE id = ?";
+
+        return jdbcTemplate.update(sql, newStatus, id);
+    }
+
+
 
 }

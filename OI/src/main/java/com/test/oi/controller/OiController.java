@@ -17,12 +17,13 @@ public class OiController {
     private final LogCleaner logCleaner;
     private final Oiservice oiservice;
 
+    // Make a request to the DPI server to ask for transaction token
     @PostMapping("/request")
     public ResponseEntity<String> requestToken(@RequestBody TransactionRequest request) throws Exception {
         return oiservice.requestToken(request);
-        //http://localhost:8080/target-endpoint
     }
 
+    // Get the latest transaction status
     @GetMapping("/latest")
     public ResponseEntity<String> getToken() {
         String token = oiservice.getCachedToken();
@@ -32,11 +33,13 @@ public class OiController {
         return ResponseEntity.ok(token);
     }
 
+    // Transaction is successful and take the money for the users
     @PostMapping("/pay")
     public ResponseEntity<String> pay(@RequestBody PaymentRequest request) {
         return ResponseEntity.ok(Oiservice.pay(request.getSenderId(), request.getAmount()));
     }
 
+    //Clean the log
     @GetMapping("/clean")
     public ResponseEntity<String> clean() throws Exception {
         logCleaner.clean();

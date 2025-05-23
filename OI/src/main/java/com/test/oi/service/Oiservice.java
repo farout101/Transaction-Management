@@ -10,12 +10,15 @@ import com.test.oi.repository.OiRepo;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,9 @@ public class Oiservice {
     private final IndiUserRepo indiUserRepo;
     private final TokenCache tokenCache;
     private final RestTemplate restTemplate;
+
+    @Value("${target.url}")
+    String targetUrl;
 
     Logger log = LoggerFactory.getLogger(Oiservice.class);
 
@@ -46,8 +52,6 @@ public class Oiservice {
     }
 
     public ResponseEntity<String> requestToken(TransactionRequest request) throws Exception {
-        String targetUrl = "http://localhost:8080/target-endpoint";
-
         // Prepare headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -56,14 +60,17 @@ public class Oiservice {
         HttpEntity<TransactionRequest> entity = new HttpEntity<>(request, headers);
 
         // Send request
-        ResponseEntity<String> response = restTemplate.postForEntity(targetUrl, entity, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                targetUrl + "/payment/start",
+                entity,
+                String.class);
 
         // Extract and cache token
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(response.getBody());
             String token = root.path("token").asText();
-
+            System.out.println("-----------------------------------------------------"+token);
             tokenCache.putToken("latestToken", token);  // Use a custom key if needed
         }
 

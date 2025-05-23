@@ -1,6 +1,7 @@
 package com.test.dps.controller;
 
-import com.test.dps.dto.Transaction;
+import com.test.dps.dto.StartTransactionRequest;
+import com.test.dps.model.Transaction;
 import com.test.dps.service.AsyncService;
 import com.test.dps.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,18 +20,18 @@ public class PaymentController {
     @Autowired
     AsyncService asyncService;
 
-    @GetMapping("all")
+    @GetMapping("/all")
     public List<Transaction> getAllTransactions() {
         return transactionService.getAllTransaction();
     }
 
     @PostMapping("/payment/start")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> makeTransaction(@RequestBody Transaction transaction) {
+    public Map<String, Object> makeTransaction(@RequestBody StartTransactionRequest transaction) {
         Map<String, Object> mso;
+        System.out.println(transaction);
         try {
             mso = transactionService.makeTransaction(transaction);
-            asyncService.postResponseTask();
         } catch (Exception e) {
             e.printStackTrace();
             throw new Error("Something went wrong");
