@@ -23,49 +23,47 @@ public class ScheduleService {
     @Autowired
     RestTemplate restTemplate;
 
-    @Value("${request.url}")
+    @Value("${request.aplus.url}")
     String url;
 
     @Autowired
     WebClient webClient;
 
-    @Scheduled(initialDelay = 5000, fixedDelay = 1000)
-    public void makeRequest() {
-        List<Transaction> waitingTransaction = transactionRepository.getAllWaitingTransaction();
-        if (waitingTransaction.isEmpty()) {
-            return;
-        }
-
-        AtomicInteger success = new AtomicInteger(0);
-        AtomicInteger failed = new AtomicInteger(0);
-
-        List<Mono<Void>> calls = waitingTransaction.stream()
-                .map(transaction ->
-                        webClient.post()
-                                .uri(url) // or full URL
-                                .bodyValue(transaction)
-                                .retrieve()
-                                .bodyToMono(GetTransactionResponse.class)
-                                .doOnSuccess(response -> {
-                                    System.out.println("Calling the merchant successful");
-                                    transactionRepository.updateTransactionStatus(transaction.getId(), "PENDING");
-                                    success.incrementAndGet();
-                                })
-                                .doOnError(error -> {
-                                    System.err.println("Error while calling merchant: " + error.getMessage());
-                                    failed.incrementAndGet();
-                                })
-                                .onErrorResume(error -> Mono.empty())
-                                .then()
-                )
-                .toList();
-
-        Mono.when(calls)
-                .doOnTerminate(() -> {
-                    System.out.printf("Summary: %d successful, %d failed%n", success.get(), failed.get());
-                })
-                .block();
-    }
-
-
+//    @Scheduled(initialDelay = 5000, fixedDelay = 1000)
+//    public void requestToAWallet() {
+//        List<Transaction> waitingTransaction = transactionRepository.getAllWaitingTransaction();
+//        if (waitingTransaction.isEmpty()) {
+//            return;
+//        }
+//
+//        AtomicInteger success = new AtomicInteger(0);
+//        AtomicInteger failed = new AtomicInteger(0);
+//
+//        List<Mono<Void>> calls = waitingTransaction.stream()
+//                .map(transaction ->
+//                        webClient.post()
+//                                .uri(url) // or full URL
+//                                .bodyValue(transaction)
+//                                .retrieve()
+//                                .bodyToMono(GetTransactionResponse.class)
+//                                .doOnSuccess(response -> {
+//                                    System.out.println("Calling the merchant successful");
+//                                    transactionRepository.updateTransactionStatus(transaction.getId(), "PENDING");
+//                                    success.incrementAndGet();
+//                                })
+//                                .doOnError(error -> {
+//                                    System.err.println("Error while calling merchant: " + error.getMessage());
+//                                    failed.incrementAndGet();
+//                                })
+//                                .onErrorResume(error -> Mono.empty())
+//                                .then()
+//                )
+//                .toList();
+//
+//        Mono.when(calls)
+//                .doOnTerminate(() -> {
+//                    System.out.printf("Summary: %d successful, %d failed%n", success.get(), failed.get());
+//                })
+//                .block();
+//    }
 }
