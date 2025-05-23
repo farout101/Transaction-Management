@@ -8,8 +8,7 @@ import lombok.Data;
 public class TransactionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long transactionId;
 
     private Long senderId;
     private String senderGroup;

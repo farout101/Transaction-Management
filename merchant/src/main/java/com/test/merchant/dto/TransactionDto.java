@@ -3,7 +3,7 @@ package com.test.merchant.dto;
 import java.time.LocalDateTime;
 
 public record TransactionDto (
-     Long id,
+     Integer transactionId,
      String senderUserId,
      String senderUserGroup,
      String receiverUserId,

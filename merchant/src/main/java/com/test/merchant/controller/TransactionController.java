@@ -1,5 +1,6 @@
 package com.test.merchant.controller;
 
+import com.test.merchant.dto.ExternalConfirmationDto;
 import com.test.merchant.dto.TransactionDto;
 import com.test.merchant.model.TransactionEntity;
 import com.test.merchant.service.TransactionService;
@@ -22,7 +23,18 @@ public class TransactionController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<String> requestTransaction(@RequestBody TransactionDto transactionDto) {
-        return transactionService.createTransaction(transactionDto);
+    public ResponseEntity<String> requestTransaction(@RequestBody TransactionDto dto) throws InterruptedException {
+        ResponseEntity<String> response = transactionService.createTransaction(dto);
+
+        transactionService.asyncWaitForServer(Long.valueOf(dto.transactionId()));
+
+        return response;
     }
+
+    @PostMapping("/external/confirm")
+    public ResponseEntity<String> confirmTransaction(@RequestBody ExternalConfirmationDto dto) {
+        transactionService.confirmTransaction(dto);
+        return ResponseEntity.ok("Transaction updated.");
+    }
+
 }
