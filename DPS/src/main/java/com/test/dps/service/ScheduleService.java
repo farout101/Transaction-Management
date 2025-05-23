@@ -1,7 +1,7 @@
 package com.test.dps.service;
 
 import com.test.dps.dto.GetTransactionResponse;
-import com.test.dps.dto.Transaction;
+import com.test.dps.model.Transaction;
 import com.test.dps.repo.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

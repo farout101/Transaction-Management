@@ -12,3 +12,14 @@ INSERT INTO individual_user (id, name, email, password, amount, group_id) VALUES
 (4, 'Hla Hla', 'hlahla@wave.com', 'wavepass', '780', 2),
 (5, 'Zaw Zaw', 'zawzaw@aya.com', 'aya123', '640', 3),
 (6, 'Mya Mya', 'myamya@aya.com', 'ayapass', '720', 3);
+
+
+
+SELECT * FROM oi_group;
+
+
+
+
+-- docker run -d --name postgres-container -e  POSTGRES_PASSWORD=password -v postgres-data:/var/lib/postgresql/data -p 5432:5432 postgres:16
+
+-- CREATE database oi_db;
