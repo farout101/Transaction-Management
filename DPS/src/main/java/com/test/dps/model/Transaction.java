@@ -1,4 +1,4 @@
-package com.test.dps.dto;
+package com.test.dps.model;
 
 import java.time.LocalDateTime;
 

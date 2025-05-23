@@ -1,6 +1,6 @@
 package com.test.dps.repo;
 
-import com.test.dps.dto.Transaction;
+import com.test.dps.model.Transaction;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
