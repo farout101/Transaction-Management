@@ -31,8 +31,6 @@ public class TransactionRepository {
     };
 
 
-
-
     TransactionRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -71,5 +69,19 @@ public class TransactionRepository {
         if(result.size() != 1) throw new Error("Selecting from database went something wrong");
         return result.get(0);
     }
+
+    public List<Transaction> getAllWaitingTransaction() {
+        String sql = "SELECT * FROM transaction WHERE status = 'WAITING'";
+
+        return jdbcTemplate.query(sql, rowMapper);
+    }
+
+    public int updateTransactionStatus(int id, String newStatus) {
+        String sql = "UPDATE transaction SET status = ? WHERE id = ?";
+
+        return jdbcTemplate.update(sql, newStatus, id);
+    }
+
+
 
 }

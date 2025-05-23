@@ -30,7 +30,6 @@ public class PaymentController {
         Map<String, Object> mso;
         try {
             mso = transactionService.makeTransaction(transaction);
-            asyncService.postResponseTask();
         } catch (Exception e) {
             e.printStackTrace();
             throw new Error("Something went wrong");
