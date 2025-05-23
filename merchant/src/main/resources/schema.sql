@@ -7,7 +7,7 @@ INSERT INTO user_entity (id, name, email, password, amount) VALUES
 
 
 INSERT INTO transaction_entity (
-    id, sender_id, sender_group, amount, receiver_id, receiver_group, status, created_at, updated_at
+    transaction_id, sender_id, sender_group, amount, receiver_id, receiver_group, status, created_at, updated_at
 ) VALUES
       (1, 1, 'GroupA', '200.00', 1,'GroupX', 'SUCCESS', '2025-05-01 10:30:00', '2025-05-01 10:45:00'),
       (2, 1, 'GroupA', '150.00', 2,'GroupY', 'PENDING', '2025-05-02 14:00:00', '2025-05-02 14:00:00'),

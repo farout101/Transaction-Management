@@ -8,6 +8,8 @@ import com.test.merchant.model.Transaction_Status;
 import com.test.merchant.repository.TransactionRepo;
 import com.test.merchant.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class TransactionService_Caching {
+
+    Logger log = LoggerFactory.getLogger(TransactionService_Caching.class);
 
     private final Cache<Long, TransactionEntity> transactionCache;
     private final TransactionRepo transactionRepo;
@@ -64,18 +68,19 @@ public class TransactionService_Caching {
         txn.setUpdatedAt(LocalDateTime.now().toString());
 
         transactionCache.put(txn.getTransactionId(), txn);
-        asyncWaitForServer(txn.getTransactionId());
 
         return ResponseEntity.ok("Transaction temporarily stored.");
     }
 
     public void confirmTransaction(ExternalConfirmationDto dto) {
-        TransactionEntity txn = transactionCache.getIfPresent(Long.valueOf(dto.transactionId()));
-        if (txn != null) {
-            txn.setStatus(Transaction_Status.SUCCESS);
-            txn.setUpdatedAt(LocalDateTime.now().toString());
-            transactionRepo.save(txn);
-            transactionCache.invalidate(Long.valueOf(dto.transactionId()));
+        if(dto.status().equals("SUCCESS")) {
+            TransactionEntity txn = transactionCache.getIfPresent(Long.valueOf(dto.transactionId()));
+            if (txn != null) {
+                txn.setStatus(Transaction_Status.SUCCESS);
+                txn.setUpdatedAt(LocalDateTime.now().toString());
+                transactionRepo.save(txn);
+                transactionCache.invalidate(Long.valueOf(dto.transactionId()));
+            }
         }
     }
 
