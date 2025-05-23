@@ -27,9 +27,7 @@ public class TransactionController {
     @PostMapping("/request")
     public ResponseEntity<String> requestTransaction(@RequestBody TransactionDto dto) throws InterruptedException {
         ResponseEntity<String> response = transactionService_Caching.createTransaction(dto);
-
         transactionService_Caching.asyncWaitForServer(Long.valueOf(dto.transactionId()));
-
         return response;
     }
 

@@ -51,7 +51,7 @@ public class Oiservice {
         }
     }
 
-    public ResponseEntity<String> requestToken(TransactionRequest request) throws Exception {
+    public ResponseEntity<String> requestToken(TransactionRequest request, String route) throws Exception {
         // Prepare headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -61,7 +61,7 @@ public class Oiservice {
 
         // Send request
         ResponseEntity<String> response = restTemplate.postForEntity(
-                targetUrl + "/payment/start",
+                targetUrl + route,
                 entity,
                 String.class);
 

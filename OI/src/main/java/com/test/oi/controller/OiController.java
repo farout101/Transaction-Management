@@ -20,7 +20,8 @@ public class OiController {
     // Make a request to the DPI server to ask for transaction token
     @PostMapping("/request")
     public ResponseEntity<String> requestToken(@RequestBody TransactionRequest request) throws Exception {
-        return oiservice.requestToken(request);
+        String route = "/payment/start";
+        return oiservice.requestToken(request, route);
     }
 
     // Get the latest transaction status
