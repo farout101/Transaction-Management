@@ -32,7 +32,6 @@ public class OiController {
         return ResponseEntity.ok(token);
     }
 
-
     @PostMapping("/pay")
     public ResponseEntity<String> pay(@RequestBody PaymentRequest request) {
         return ResponseEntity.ok(Oiservice.pay(request.getSenderId(), request.getAmount()));
