@@ -28,7 +28,7 @@ public class TransactionService_V2 {
     private final TransactionRepo transactionRepo;
     private final UserRepo userRepo;
     private final WebClient webClient;
-    private final Persistance persistance;
+    private final DbTransaction dbTransaction;
 
     @Async
     public void asyncWaitForServer(Long transactionId) throws InterruptedException {
@@ -46,7 +46,7 @@ public class TransactionService_V2 {
             log.info("External status for transaction {} is {}", transactionId, externalStatus.status());
 
             if ("SUCCESS".equalsIgnoreCase(externalStatus.status())) {
-                persistance.confirmTransaction(new ExternalConfirmationDto(transactionId.toString(), "SUCCESS"));
+                dbTransaction.confirmTransaction(new ExternalConfirmationDto(transactionId.toString(), "SUCCESS"));
                 return;
             }
 

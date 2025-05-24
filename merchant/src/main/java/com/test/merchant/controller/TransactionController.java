@@ -3,7 +3,7 @@ package com.test.merchant.controller;
 import com.test.merchant.dto.ExternalConfirmationDto;
 import com.test.merchant.dto.TransactionDto;
 import com.test.merchant.model.TransactionEntity;
-import com.test.merchant.service.Persistance;
+import com.test.merchant.service.DbTransaction;
 import com.test.merchant.service.TransactionService_V2;
 import com.test.merchant.service.TransactionService_Old;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class TransactionController {
 
     private final TransactionService_Old transactionService_old;
     private final TransactionService_V2 transactionService_v2;
-    private final Persistance persistance;
+    private final DbTransaction dbTransaction;
 
     @GetMapping("/transactions")
     public ResponseEntity<List<TransactionEntity>> findAll() {
@@ -35,7 +35,7 @@ public class TransactionController {
 
     @PostMapping("/external/confirm")
     public ResponseEntity<String> confirmTransaction(@RequestBody ExternalConfirmationDto dto) {
-        persistance.confirmTransaction(dto);
+        dbTransaction.confirmTransaction(dto);
         return ResponseEntity.ok("Transaction updated.");
     }
 

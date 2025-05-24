@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class Persistance {
+public class DbTransaction {
 
     private final Cache<Long, TransactionEntity> transactionCache;
     private final TransactionRepo transactionRepo;
