@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.test.merchant.model.TransactionEntity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,4 +19,10 @@ public class CacheConfig {
                 .maximumSize(10000)
                 .build();
     }
+
+    @Bean
+    public WebClient webClient(WebClient.Builder builder) {
+        return builder.build();
+    }
+
 }
