@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -72,17 +73,18 @@ public class TransactionService_Caching {
         return ResponseEntity.ok("Transaction temporarily stored.");
     }
 
+    @Transactional
     public void confirmTransaction(ExternalConfirmationDto dto) {
-        if(dto.status().equals("SUCCESS")) {
-            TransactionEntity txn = transactionCache.getIfPresent(Long.valueOf(dto.transactionId()));
-            if (txn != null) {
-                txn.setStatus(Transaction_Status.SUCCESS);
-                txn.setUpdatedAt(LocalDateTime.now().toString());
-                transactionRepo.save(txn);
-                transactionCache.invalidate(Long.valueOf(dto.transactionId()));
-            }
+        Long txnId = Long.valueOf(dto.transactionId());
+        TransactionEntity txn = transactionCache.getIfPresent(txnId);
+        if (txn != null && dto.status().equals("SUCCESS")) {
+            txn.setStatus(Transaction_Status.SUCCESS);
+            txn.setUpdatedAt(LocalDateTime.now().toString());
+            transactionRepo.save(txn);
+            transactionCache.invalidate(txnId);
         }
     }
+
 
     public boolean receiverExist(Long receiverId) {
         return userRepo.existsById(receiverId);
