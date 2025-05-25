@@ -32,30 +32,37 @@ public class TransactionService_V2 {
 
     @Async
     public void asyncWaitForServer(Long transactionId) throws InterruptedException {
-        int[] waitDurations = {36, 12, 12};
+        int[] waitDurations = {10, 5, 5};
 
         for (int waitDuration : waitDurations) {
             Thread.sleep(waitDuration * 1000);
 
-            // trigger external check
+            // internal check
+            if (checkIfConfirmed(transactionId)) {
+                log.info("Transaction {} was already confirmed internally. Breaking the wait loop.", transactionId);
+                return;
+            }
+
+            // external check
             ExternalStatusResponse externalStatus = fetchStatusFromExternalServer(transactionId);
-            if(externalStatus == null) {
+            if (externalStatus == null) {
                 log.warn("External status check failed for transaction {}", transactionId);
                 continue;
             }
+
             log.info("External status for transaction {} is {}", transactionId, externalStatus.status());
 
             if ("SUCCESS".equalsIgnoreCase(externalStatus.status())) {
                 dbTransaction.confirmTransaction(new ExternalConfirmationDto(transactionId.toString(), "SUCCESS"));
+                log.info("Transaction {} confirmed by external server. Breaking the wait loop.", transactionId);
                 return;
             }
-
-            // to internal check
-            if (checkIfConfirmed(transactionId)) return;
         }
 
         markTransactionFailed(transactionId);
+        log.info("Transaction {} marked as FAILED after retrying. Ending the wait loop.", transactionId);
     }
+
 
     private ExternalStatusResponse fetchStatusFromExternalServer(Long transactionId) {
         try {
@@ -74,6 +81,11 @@ public class TransactionService_V2 {
 
     private boolean checkIfConfirmed(Long transactionId) {
         TransactionEntity txn = transactionCache.getIfPresent(transactionId);
+
+        if (txn == null) {
+            txn = transactionRepo.findById(transactionId).orElse(null);
+        }
+
         return txn != null && txn.getStatus() != Transaction_Status.PENDING;
     }
 
