@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class PendingTransactionWorker extends AbstractTransactionWorker {
 
+    private static final String confirmTransactionOiUrlPath = "/oi/api/v1/pay";
+
     @Autowired
     private PendingTransactionQueue pendingTransactionQueue;
 
@@ -34,8 +36,8 @@ public class PendingTransactionWorker extends AbstractTransactionWorker {
     protected void threadLooping() throws InterruptedException {
         while (true) {
             if(pendingTransactionQueue.isEmpty()) {
-                System.out.println("pendingTransactionQueue is Empty, Not working rn");
-                Thread.sleep(1000);
+                //System.out.println("pendingTransactionQueue is Empty, Not working rn");
+                Thread.sleep(2000);
                 continue;
             }
             try {
@@ -50,12 +52,12 @@ public class PendingTransactionWorker extends AbstractTransactionWorker {
 
     private void processTransaction(Transaction transaction) {
         webClient.post()
-                .uri(oiUrl)
+                .uri(oiUrl + confirmTransactionOiUrlPath)
                 .bodyValue(transaction)
                 .exchangeToMono(clientResponse -> {
                     if (clientResponse.statusCode().is2xxSuccessful()) {
                         System.out.println("Success! Status: " + clientResponse.statusCode() + transaction);
-                        return clientResponse.bodyToMono(GetTransactionResponse.class);
+                        return Mono.just("yes success");
                     } else {
                         System.err.println("Failed! Status: " + clientResponse.statusCode() + transaction);
                         pendingTransactionQueue.submit(transaction); // Requeue if needed
@@ -82,7 +84,7 @@ public class PendingTransactionWorker extends AbstractTransactionWorker {
                 .exchangeToMono(clientResponse -> {
                     if (clientResponse.statusCode().is2xxSuccessful()) {
                         System.out.println("Success! Status: " + clientResponse.statusCode() + transaction);
-                        return clientResponse.bodyToMono(GetTransactionResponse.class);
+                        return Mono.just("yes success");
                     } else {
                         System.err.println("Failed! Status: " + clientResponse.statusCode() + transaction);
                         pendingTransactionQueue.submit(transaction); // Requeue if needed

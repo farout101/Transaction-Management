@@ -1,5 +1,6 @@
 package com.test.oi.controller;
 
+import com.test.oi.dto.AcceptTransactionDTO;
 import com.test.oi.dto.PaymentRequest;
 import com.test.oi.dto.TransactionRequest;
 import com.test.oi.service.LogCleaner;
@@ -25,9 +26,9 @@ public class OiController {
     }
 
     // Get the latest transaction status
-    @GetMapping("/latest")
-    public ResponseEntity<String> getToken() {
-        String token = oiservice.getCachedToken();
+    @GetMapping("/{id}/latest")
+    public ResponseEntity<String> getToken(@PathVariable int id) {
+        String token = oiservice.getCachedToken(id).toString();
         if (token == null) {
             return ResponseEntity.notFound().build();
         }
@@ -36,8 +37,10 @@ public class OiController {
 
     // Transaction is successful and take the money for the users
     @PostMapping("/pay")
-    public ResponseEntity<String> pay(@RequestBody PaymentRequest request) {
-        return ResponseEntity.ok(Oiservice.pay(request.getSenderId(), request.getAmount()));
+    public ResponseEntity<String> pay(@RequestBody AcceptTransactionDTO request) {
+        System.out.println("-------------------------------------------Successful-Transaction-id="
+                + request.id());
+        return ResponseEntity.ok(Oiservice.pay(request.id()));
     }
 
     //Clean the log

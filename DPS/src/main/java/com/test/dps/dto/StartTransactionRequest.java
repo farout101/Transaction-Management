@@ -5,4 +5,5 @@ public record StartTransactionRequest(
         OiGroup senderGroup,
         String amount,
         Long receiverId
-) {}
+) {
+}

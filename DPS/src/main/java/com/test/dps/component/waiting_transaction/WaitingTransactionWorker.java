@@ -30,8 +30,8 @@ public class WaitingTransactionWorker extends AbstractTransactionWorker {
     protected void threadLooping() throws InterruptedException {
         while (true) {
             if(waitingTransactionQueue.isEmpty()) {
-                System.out.println("waitingTransactionQueue is Empty, Not working rn");
-                Thread.sleep(1000);
+                //System.out.println("waitingTransactionQueue is Empty, Not working rn");
+                Thread.sleep(2000);
                 continue;
             }
             try {

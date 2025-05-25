@@ -18,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 public class Oiservice {
@@ -34,19 +32,22 @@ public class Oiservice {
 
     Logger log = LoggerFactory.getLogger(Oiservice.class);
 
-    public String pay(Long id, String amount) {
-        IndividualUser user = indiUserRepo.findById(id).orElse(null);
+    public String pay(int transactionId) {
+
+        TransactionRequest transactionRequest = tokenCache.getToken(transactionId);
+
+        IndividualUser user = indiUserRepo.findById(transactionRequest.getSenderId()).orElse(null);
 
         if (user != null) {
             String currentAmount = user.getAmount();
             // Assuming amount is a string that can be converted to a number
-            double newAmount = Double.parseDouble(currentAmount) - Double.parseDouble(amount);
+            double newAmount = Double.parseDouble(currentAmount) - Double.parseDouble(transactionRequest.getAmount());
             user.setAmount(String.valueOf(newAmount));
             indiUserRepo.save(user);
-            log.info("Payment successful. User ID: {}, New Amount: {}", id, newAmount);
+            log.info("Payment successful. User ID: {}, New Amount: {}", transactionId, newAmount);
             return "Payment successful. New amount: " + newAmount;
         } else {
-            log.debug("User not found. ID: {}", id);
+            log.debug("User not found. ID: {}", transactionId);
             return "User not found.";
         }
     }
@@ -71,13 +72,13 @@ public class Oiservice {
             JsonNode root = mapper.readTree(response.getBody());
             String token = root.path("token").asText();
             System.out.println("-----------------------------------------------------"+token);
-            tokenCache.putToken("latestToken", token);  // Use a custom key if needed
+            tokenCache.putToken(Integer.valueOf(token), request);  // Use a custom key if needed
         }
 
         return response;
     }
 
-    public String getCachedToken() {
-        return tokenCache.getToken("latestToken");
+    public TransactionRequest getCachedToken(int transactionId) {
+        return tokenCache.getToken(transactionId);
     }
 }
