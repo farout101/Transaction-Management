@@ -28,19 +28,17 @@ public class WaitingTransactionWorker extends AbstractTransactionWorker {
 
 
     protected void threadLooping() throws InterruptedException {
-        while (true) {
             if(waitingTransactionQueue.isEmpty()) {
-                //System.out.println("waitingTransactionQueue is Empty, Not working rn");
+                System.out.println("waitingTransactionQueue is Empty, Not working rn");
                 Thread.sleep(2000);
-                continue;
+            } else {
+                try {
+                    Transaction transaction = waitingTransactionQueue.take();
+                    processTransaction(transaction);
+                } catch (Exception e) {
+                    System.err.println("Worker error: " + e.getMessage());
+                }
             }
-            try {
-                Transaction transaction = waitingTransactionQueue.take();
-                processTransaction(transaction);
-            } catch (Exception e) {
-                System.err.println("Worker error: " + e.getMessage());
-            }
-        }
     }
 
 
@@ -50,10 +48,18 @@ public class WaitingTransactionWorker extends AbstractTransactionWorker {
                 .bodyValue(transaction)
                 .exchangeToMono(clientResponse -> {
                     if (clientResponse.statusCode().is2xxSuccessful()) {
-                        System.out.println("Success! Status: " + clientResponse.statusCode() + transaction);
+                        System.out.println("Success! Status: " +
+                                clientResponse.statusCode() +
+                                transaction +
+                                " " + this.getClass().getName()
+                        );
                         return clientResponse.bodyToMono(GetTransactionResponse.class);
                     } else {
-                        System.err.println("Failed! Status: " + clientResponse.statusCode() + transaction);
+                        System.err.println("Failed! Status: " +
+                                clientResponse.statusCode() +
+                                transaction +
+                                " " + this.getClass().getName()
+                        );
                         pendingTransactionQueue.submit(transaction);
                         return Mono.empty();
                     }

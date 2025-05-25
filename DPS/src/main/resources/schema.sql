@@ -9,14 +9,14 @@ CREATE TABLE IF NOT EXISTS transaction (
     status VARCHAR(10) DEFAULT 'WAITING'
 );
 
--- INSERT INTO transaction (
---     sender_user_id,
---     sender_user_group,
---     receiver_user_group,
---     receiver_user_id,
---     amount
--- ) VALUES
---       ('user_003', 'wallet', 'wallet', 'user_004', 120.50),
---       ('user_005', 'bank', 'wallet', 'user_006', 75.25),
---       ('user_007', 'loan', 'bank', 'user_008', 500.00),
---       ('user_009', 'wallet', 'loan', 'user_010', 330.15);
+INSERT INTO transaction (
+    sender_user_id,
+    sender_user_group,
+    receiver_user_group,
+    receiver_user_id,
+    amount
+) VALUES
+      ('user_003', 'wallet', 'wallet', 'user_004', 120.50),
+      ('user_005', 'bank', 'wallet', 'user_006', 75.25),
+      ('user_007', 'loan', 'bank', 'user_008', 500.00),
+      ('user_009', 'wallet', 'loan', 'user_010', 330.15);

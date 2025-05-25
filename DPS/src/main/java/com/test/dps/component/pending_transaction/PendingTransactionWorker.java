@@ -7,16 +7,20 @@ import com.test.dps.repo.TransactionRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.function.Consumer;
 
 
 @Component
 @AllArgsConstructor
 public class PendingTransactionWorker extends AbstractTransactionWorker {
 
-    private static final String confirmTransactionOiUrlPath = "/oi/api/v1/pay";
+
 
     @Autowired
     private PendingTransactionQueue pendingTransactionQueue;
@@ -24,81 +28,50 @@ public class PendingTransactionWorker extends AbstractTransactionWorker {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    @Autowired
-    private WebClient webClient;
-
     @Value("${request.aplus.url}")
     private String aPlusUrl;
+
+    @Value("${request.aplus.url.path.confirm}")
+    private String confirmTransactionAPlusUrlPath;
 
     @Value("${request.oi.url}")
     private String oiUrl;
 
+    @Value("${request.oi.url.path.confirm}")
+    private String confirmTransactionOiUrlPath;
+
     protected void threadLooping() throws InterruptedException {
-        while (true) {
             if(pendingTransactionQueue.isEmpty()) {
-                //System.out.println("pendingTransactionQueue is Empty, Not working rn");
+                System.out.println("pendingTransactionQueue is Empty, Not working rn");
                 Thread.sleep(2000);
-                continue;
+            } else {
+                try {
+                    Transaction transaction = pendingTransactionQueue.take();
+                    processTransaction(transaction);
+                } catch (Exception e) {
+                    System.err.println("Worker error: " + e.getMessage());
+                }
             }
-            try {
-                Transaction transaction = pendingTransactionQueue.take();
-                processTransaction(transaction);
-            } catch (Exception e) {
-                System.err.println("Worker error: " + e.getMessage());
-            }
-        }
     }
 
-
     private void processTransaction(Transaction transaction) {
-        webClient.post()
-                .uri(oiUrl + confirmTransactionOiUrlPath)
-                .bodyValue(transaction)
-                .exchangeToMono(clientResponse -> {
-                    if (clientResponse.statusCode().is2xxSuccessful()) {
-                        System.out.println("Success! Status: " + clientResponse.statusCode() + transaction);
-                        return Mono.just("yes success");
-                    } else {
-                        System.err.println("Failed! Status: " + clientResponse.statusCode() + transaction);
-                        pendingTransactionQueue.submit(transaction); // Requeue if needed
-                        return Mono.empty();
-                    }
-                })
-                .doOnSuccess(res -> {
-                    transactionRepository.updateTransactionStatus(transaction.getId(), "CASH TAKEN");
-                    callToAPlus(transaction);
-                })
-                .doOnError(err -> {
-                    System.err.println("Error processing transaction: " + err.getMessage());
-                    pendingTransactionQueue.submit(transaction);
-                })
-                .onErrorResume(e -> Mono.empty())
-                .subscribe();
+        makePostTransactionRequest(
+                oiUrl + confirmTransactionOiUrlPath,
+                transaction,
+                (e) -> e.getMessage(),
+                () -> {callToAPlus(transaction);}
+        );
+
     }
 
 
     private void callToAPlus(Transaction transaction) {
-        webClient.post()
-                .uri(aPlusUrl)
-                .bodyValue(transaction)
-                .exchangeToMono(clientResponse -> {
-                    if (clientResponse.statusCode().is2xxSuccessful()) {
-                        System.out.println("Success! Status: " + clientResponse.statusCode() + transaction);
-                        return Mono.just("yes success");
-                    } else {
-                        System.err.println("Failed! Status: " + clientResponse.statusCode() + transaction);
-                        pendingTransactionQueue.submit(transaction); // Requeue if needed
-                        return Mono.empty();
-                    }
-                })
-                .doOnSuccess(res -> {
-                    transactionRepository.updateTransactionStatus(transaction.getId(), "SUCCESS");
-                })
-                .doOnError(err -> {
-                    System.err.println("Error processing transaction: " + err.getMessage());
-                    pendingTransactionQueue.submit(transaction);
-                })
-                .onErrorResume(e -> Mono.empty())
-                .subscribe();
+        makePostTransactionRequest(
+                aPlusUrl + confirmTransactionAPlusUrlPath,
+                transaction,
+                (e) -> e.getMessage(),
+                () -> {}
+                );
     }
+
 }
