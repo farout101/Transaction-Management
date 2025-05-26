@@ -62,7 +62,7 @@ public class TransactionService_V3 {
             ExternalStatusResponse response = fetchStatusFromExternalServer(txnId);
             if (response == null) {
                 log.warn("Failed to fetch external status for txn {}. Retrying...", txnId);
-                scheduleCheck(txnId, attemptCounter); // Retry next
+                scheduleCheck(txnId, attemptCounter); // retry next
                 return;
             }
 
@@ -72,7 +72,7 @@ public class TransactionService_V3 {
                 dbTransaction.confirmTransaction(new ExternalConfirmationDto(txnId.toString(), "SUCCESS"));
                 log.info("Transaction {} confirmed by external status check.", txnId);
             } else {
-                scheduleCheck(txnId, attemptCounter); // Retry again
+                scheduleCheck(txnId, attemptCounter); // try again
             }
 
         }, Instant.now().plusSeconds(delaySeconds));

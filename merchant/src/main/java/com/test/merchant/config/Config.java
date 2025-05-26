@@ -36,7 +36,7 @@ public class Config {
     @Bean
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(5); // Customize as needed
+        scheduler.setPoolSize(5);
         scheduler.setThreadNamePrefix("txn-checker-");
         scheduler.initialize();
         return scheduler;
