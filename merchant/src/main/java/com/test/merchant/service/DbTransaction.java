@@ -26,25 +26,37 @@ public class DbTransaction {
         Long txnId = Long.valueOf(dto.transactionId());
         TransactionEntity txn = transactionCache.getIfPresent(txnId);
 
-        if (txn != null && "SUCCESS".equalsIgnoreCase(dto.status())) {
-            User user = userRepo.findById(txn.getReceiverId())
-                    .orElseThrow(() -> new RuntimeException("Receiver user not found for ID: " + txn.getReceiverId()));
+        if (txn == null) return;
 
-            Double userBalance = Double.valueOf((user.getAmount()));
-            Double txnAmount = Double.valueOf(txn.getAmount());
-            user.setAmount(String.valueOf(userBalance + txnAmount));
+        Transaction_Status status = parseStatus(dto.status());
+        if (status == null) return;
 
-            // for transaction
-            txn.setStatus(Transaction_Status.SUCCESS);
-            txn.setUpdatedAt(LocalDateTime.now().toString());
+        User receiver = userRepo.findById(txn.getReceiverId())
+                .orElseThrow(() -> new RuntimeException("Receiver user not found for ID: " + txn.getReceiverId()));
 
-            // save
-            transactionRepo.save(txn);
-            userRepo.save(user);
+        if (status == Transaction_Status.SUCCESS) {
+            addToUserBalance(receiver, txn.getAmount());
+        }
 
-            // clear cache
-            transactionCache.invalidate(txnId);
+        txn.setStatus(status);
+        txn.setUpdatedAt(LocalDateTime.now().toString());
+
+        transactionRepo.save(txn);
+        userRepo.save(receiver);
+        transactionCache.invalidate(txnId);
+    }
+
+    private Transaction_Status parseStatus(String status) {
+        try {
+            return Transaction_Status.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null; // invalid status
         }
     }
 
+    private void addToUserBalance(User user, String txnAmountStr) {
+        double current = Double.parseDouble(user.getAmount());
+        double txnAmount = Double.parseDouble(txnAmountStr);
+        user.setAmount(String.valueOf(current + txnAmount));
+    }
 }

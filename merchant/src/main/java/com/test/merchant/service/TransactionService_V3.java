@@ -55,10 +55,11 @@ public class TransactionService_V3 {
 
         taskScheduler.schedule(() -> {
             if (checkIfConfirmed(txnId)) {
-                log.info("Transaction {} already confirmed. Skipping further checks.", txnId);
+                log.info("Transaction {} already confirmed or finalized. Skipping further checks.", txnId);
                 return;
             }
 
+            // Fetch status from external server
             ExternalStatusResponse response = fetchStatusFromExternalServer(txnId);
             if (response == null) {
                 log.warn("Failed to fetch external status for txn {}. Retrying...", txnId);
@@ -71,11 +72,17 @@ public class TransactionService_V3 {
             if ("SUCCESS".equalsIgnoreCase(response.status())) {
                 dbTransaction.confirmTransaction(new ExternalConfirmationDto(txnId.toString(), "SUCCESS"));
                 log.info("Transaction {} confirmed by external status check.", txnId);
-            } else {
-                scheduleCheck(txnId, attemptCounter); // try again
+            }
+            else if ("FAIL".equalsIgnoreCase(response.status())) {
+                log.warn("Transaction {} marked as FAIL by external status. Stopping retries.", txnId);
+                markTransactionFailed(txnId);
+            }
+            else {
+                scheduleCheck(txnId, attemptCounter);
             }
 
         }, Instant.now().plusSeconds(delaySeconds));
+
     }
 
     private ExternalStatusResponse fetchStatusFromExternalServer(Long transactionId) {

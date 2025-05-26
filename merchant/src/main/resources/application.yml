@@ -11,3 +11,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+logging:
+  file:
+    name: logs/merchant.log
+  level:
+    root: INFO
+    com.test.merchant: DEBUG
