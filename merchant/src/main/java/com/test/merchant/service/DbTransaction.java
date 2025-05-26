@@ -8,6 +8,8 @@ import com.test.merchant.model.User;
 import com.test.merchant.repository.TransactionRepo;
 import com.test.merchant.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class DbTransaction {
+
+    Logger log = LoggerFactory.getLogger(DbTransaction.class);
 
     private final Cache<Long, TransactionEntity> transactionCache;
     private final TransactionRepo transactionRepo;
@@ -26,10 +30,16 @@ public class DbTransaction {
         Long txnId = Long.valueOf(dto.transactionId());
         TransactionEntity txn = transactionCache.getIfPresent(txnId);
 
-        if (txn == null) return;
+        if (txn == null) {
+            log.info("Transaction id {} not found", txnId);
+            return;
+        }
 
         Transaction_Status status = parseStatus(dto.status());
-        if (status == null) return;
+        if (status == null) {
+            log.info("Transaction {} status not found", txnId);
+            return;
+        }
 
         User receiver = userRepo.findById(txn.getReceiverId())
                 .orElseThrow(() -> new RuntimeException("Receiver user not found for ID: " + txn.getReceiverId()));
@@ -50,6 +60,7 @@ public class DbTransaction {
         try {
             return Transaction_Status.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
+            log.error("Invalid transaction status: {}", status);
             return null; // invalid status
         }
     }
