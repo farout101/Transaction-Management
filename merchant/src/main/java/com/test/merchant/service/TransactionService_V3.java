@@ -12,80 +12,91 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
-public class TransactionService_V2 {
+public class TransactionService_V3 {
 
-    Logger log = LoggerFactory.getLogger(TransactionService_V2.class);
+    Logger log = LoggerFactory.getLogger(TransactionService_V3.class);
 
     private final Cache<Long, TransactionEntity> transactionCache;
     private final TransactionRepo transactionRepo;
     private final UserRepo userRepo;
     private final WebClient webClient;
     private final DbTransaction dbTransaction;
+    private final TaskScheduler taskScheduler;
 
-    @Async
-    public void asyncWaitForServer(Long transactionId) throws InterruptedException {
-        int[] waitDurations = {10, 5, 5};
+    private static final int MAX_ATTEMPTS = 3;
+    private static final int[] WAIT_SECONDS = {10, 5, 5};
 
-        for (int waitDuration : waitDurations) {
-            Thread.sleep(waitDuration * 1000); // won't block because this is async
-
-            // internal check
-            if (checkIfConfirmed(transactionId)) {
-                log.info("Transaction {} was already confirmed internally. Breaking the wait loop.", transactionId);
-                return;
-            }
-
-            // external check
-            ExternalStatusResponse externalStatus = fetchStatusFromExternalServer(transactionId);
-            if (externalStatus == null) {
-                log.warn("External status check failed for transaction {}", transactionId);
-                continue;
-            }
-
-            log.info("External status for transaction {} is {}", transactionId, externalStatus.status());
-
-            if ("SUCCESS".equalsIgnoreCase(externalStatus.status())) {
-                dbTransaction.confirmTransaction(new ExternalConfirmationDto(transactionId.toString(), "SUCCESS"));
-                log.info("Transaction {} confirmed by external server. Breaking the wait loop.", transactionId);
-                return;
-            }
-        }
-
-        markTransactionFailed(transactionId);
-        log.info("Transaction {} marked as FAILED after retrying. Ending the wait loop.", transactionId);
+    public void scheduleTransactionCheck(Long transactionId) {
+        AtomicInteger attempt = new AtomicInteger(0);
+        scheduleCheck(transactionId, attempt);
     }
 
+    private void scheduleCheck(Long txnId, AtomicInteger attemptCounter) {
+        int currentAttempt = attemptCounter.getAndIncrement(); // get as 0 and then 1
+
+        if (currentAttempt >= MAX_ATTEMPTS) {
+            log.warn("Transaction {} reached max attempts. Marking as failed.", txnId);
+            markTransactionFailed(txnId);
+            return;
+        }
+
+        int delaySeconds = WAIT_SECONDS[currentAttempt];
+        log.info("Scheduling transaction {} check in {} seconds (attempt {}/{})", txnId, delaySeconds, currentAttempt + 1, MAX_ATTEMPTS);
+
+        taskScheduler.schedule(() -> {
+            if (checkIfConfirmed(txnId)) {
+                log.info("Transaction {} already confirmed. Skipping further checks.", txnId);
+                return;
+            }
+
+            ExternalStatusResponse response = fetchStatusFromExternalServer(txnId);
+            if (response == null) {
+                log.warn("Failed to fetch external status for txn {}. Retrying...", txnId);
+                scheduleCheck(txnId, attemptCounter); // Retry next
+                return;
+            }
+
+            log.info("Fetched external status for txn {}: {}", txnId, response.status());
+
+            if ("SUCCESS".equalsIgnoreCase(response.status())) {
+                dbTransaction.confirmTransaction(new ExternalConfirmationDto(txnId.toString(), "SUCCESS"));
+                log.info("Transaction {} confirmed by external status check.", txnId);
+            } else {
+                scheduleCheck(txnId, attemptCounter); // Retry again
+            }
+
+        }, Instant.now().plusSeconds(delaySeconds));
+    }
 
     private ExternalStatusResponse fetchStatusFromExternalServer(Long transactionId) {
         try {
             return webClient
                     .get()
-                    .uri("http://localhost:8080/payment/{id}/status", transactionId) // Update URL THiHAN
+                    .uri("http://localhost:8080/payment/{id}/status", transactionId)
                     .retrieve()
                     .bodyToMono(ExternalStatusResponse.class)
-                    .block(); // it's Ok cuz it's async I guess
+                    .block();  // since the scheduler is Async I think the block is possible:)
         } catch (Exception e) {
             log.warn("Error fetching external status for txn {}: {}", transactionId, e.getMessage());
             return null;
         }
     }
 
-
     private boolean checkIfConfirmed(Long transactionId) {
         TransactionEntity txn = transactionCache.getIfPresent(transactionId);
-
         if (txn == null) {
             txn = transactionRepo.findById(transactionId).orElse(null);
         }
-
         return txn != null && txn.getStatus() != Transaction_Status.PENDING;
     }
 
@@ -114,9 +125,11 @@ public class TransactionService_V2 {
         txn.setCreatedAt(LocalDateTime.now().toString());
         txn.setUpdatedAt(LocalDateTime.now().toString());
 
+        transactionRepo.save(txn); // Persist to DB
         transactionCache.put(txn.getTransactionId(), txn);
 
-        return ResponseEntity.ok("Transaction temporarily stored.");
+        scheduleTransactionCheck(txn.getTransactionId()); // Schedule check
+        return ResponseEntity.ok("Transaction stored and scheduled for confirmation.");
     }
 
     public boolean receiverExist(Long receiverId) {

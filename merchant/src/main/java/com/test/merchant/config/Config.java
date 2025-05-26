@@ -3,14 +3,22 @@ package com.test.merchant.config;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.test.merchant.model.TransactionEntity;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.concurrent.TimeUnit;
 
 @Configuration
-public class CacheConfig {
+@EnableCaching
+@EnableTransactionManagement
+@EnableScheduling
+public class Config {
 
     @Bean
     public Cache<Long, TransactionEntity> transactionCache() {
@@ -23,6 +31,15 @@ public class CacheConfig {
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
         return builder.build();
+    }
+
+    @Bean
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(5); // Customize as needed
+        scheduler.setThreadNamePrefix("txn-checker-");
+        scheduler.initialize();
+        return scheduler;
     }
 
 }

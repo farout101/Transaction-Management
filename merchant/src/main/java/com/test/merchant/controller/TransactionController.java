@@ -4,8 +4,8 @@ import com.test.merchant.dto.ExternalConfirmationDto;
 import com.test.merchant.dto.TransactionDto;
 import com.test.merchant.model.TransactionEntity;
 import com.test.merchant.service.DbTransaction;
-import com.test.merchant.service.TransactionService_V2;
 import com.test.merchant.service.TransactionService_Old;
+import com.test.merchant.service.TransactionService_V3;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +18,7 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService_Old transactionService_old;
-    private final TransactionService_V2 transactionService_v2;
+    private final TransactionService_V3 transactionService_v3;
     private final DbTransaction dbTransaction;
 
     @GetMapping("/transactions")
@@ -27,10 +27,8 @@ public class TransactionController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<String> requestTransaction(@RequestBody TransactionDto dto) throws InterruptedException {
-        ResponseEntity<String> response = transactionService_v2.createTransaction(dto);
-        transactionService_v2.asyncWaitForServer(Long.valueOf(dto.transactionId()));
-        return response;
+    public ResponseEntity<String> requestTransaction(@RequestBody TransactionDto dto) {
+        return transactionService_v3.createTransaction(dto);
     }
 
     @PostMapping("/external/confirm")
