@@ -5,6 +5,7 @@ import com.test.dps.dto.GetTransactionResponse;
 import com.test.dps.model.Transaction;
 import com.test.dps.repo.TransactionRepository;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.util.function.Consumer;
 
 @Component
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class PendingTransactionWorker extends AbstractTransactionWorker {
 
 

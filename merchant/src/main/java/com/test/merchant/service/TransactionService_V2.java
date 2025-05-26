@@ -68,7 +68,7 @@ public class TransactionService_V2 {
         try {
             return webClient
                     .get()
-                    .uri("http://external-server/api/status/{id}", transactionId) // Update URL Thinan
+                    .uri("http://localhost:8080/payment/{id}/status", transactionId) // Update URL Thinan
                     .retrieve()
                     .bodyToMono(ExternalStatusResponse.class)
                     .block(); // it's okey cuz it's async I guess
