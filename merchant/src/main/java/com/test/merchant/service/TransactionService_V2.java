@@ -35,7 +35,7 @@ public class TransactionService_V2 {
         int[] waitDurations = {10, 5, 5};
 
         for (int waitDuration : waitDurations) {
-            Thread.sleep(waitDuration * 1000);
+            Thread.sleep(waitDuration * 1000); // won't block because this is async
 
             // internal check
             if (checkIfConfirmed(transactionId)) {
@@ -68,10 +68,10 @@ public class TransactionService_V2 {
         try {
             return webClient
                     .get()
-                    .uri("http://localhost:8080/payment/{id}/status", transactionId) // Update URL Thinan
+                    .uri("http://localhost:8080/payment/{id}/status", transactionId) // Update URL THiHAN
                     .retrieve()
                     .bodyToMono(ExternalStatusResponse.class)
-                    .block(); // it's okey cuz it's async I guess
+                    .block(); // it's Ok cuz it's async I guess
         } catch (Exception e) {
             log.warn("Error fetching external status for txn {}: {}", transactionId, e.getMessage());
             return null;
@@ -99,7 +99,7 @@ public class TransactionService_V2 {
         }
     }
 
-    public ResponseEntity<String> createTransaction(TransactionDto dto) throws InterruptedException {
+    public ResponseEntity<String> createTransaction(TransactionDto dto) {
         if (!receiverExist(Long.valueOf(dto.receiverUserId())))
             return ResponseEntity.badRequest().body("Receiver does not exist");
 
