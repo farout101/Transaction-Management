@@ -26,6 +26,8 @@ public class WaitingTransactionWorker extends AbstractTransactionWorker {
     @Value("${request.aplus.url}")
     private String aPlusUrl;
 
+    @Value("${request.aplus.url.path.create}")
+    private String createTransactionAPlusUrlPath;
 
     protected void threadLooping() throws InterruptedException {
             if(waitingTransactionQueue.isEmpty()) {
@@ -44,7 +46,7 @@ public class WaitingTransactionWorker extends AbstractTransactionWorker {
 
     private void processTransaction(Transaction transaction) {
         webClient.post()
-                .uri(aPlusUrl)
+                .uri(aPlusUrl + createTransactionAPlusUrlPath)
                 .bodyValue(transaction)
                 .exchangeToMono(clientResponse -> {
                     if (clientResponse.statusCode().is2xxSuccessful()) {
